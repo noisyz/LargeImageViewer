@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/LargeImageViewer.iml" filepath="$PROJECT_DIR$/LargeImageViewer.iml" />
+      <module fileurl="file://$PROJECT_DIR$/largeimageviewexample/largeimageviewexample.iml" filepath="$PROJECT_DIR$/largeimageviewexample/largeimageviewexample.iml" />
+      <module fileurl="file://$PROJECT_DIR$/largeimageviewlibrary/largeimageviewlibrary.iml" filepath="$PROJECT_DIR$/largeimageviewlibrary/largeimageviewlibrary.iml" />
+    </modules>
+  </component>
+</project>
