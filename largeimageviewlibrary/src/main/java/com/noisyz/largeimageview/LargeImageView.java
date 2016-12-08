@@ -22,7 +22,9 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
-public class LargeImageView extends View implements CameraManager.CameraCallback, Overlay.Callback, ViewTreeObserver.OnGlobalLayoutListener {
+public class LargeImageView extends View implements CameraManager.CameraCallback,
+        Overlay.Callback, ViewTreeObserver.OnGlobalLayoutListener,
+        View.OnAttachStateChangeListener {
 
     private List<Overlay> overlays;
     private CameraManager cameraManager;
@@ -64,6 +66,7 @@ public class LargeImageView extends View implements CameraManager.CameraCallback
         imageOverlay.setOverlayChangedListener(this);
 
         getViewTreeObserver().addOnGlobalLayoutListener(this);
+        addOnAttachStateChangeListener(this);
     }
 
     public void setImageResource(int imageResourceID) {
@@ -151,9 +154,20 @@ public class LargeImageView extends View implements CameraManager.CameraCallback
 
 
     public void release() {
+        imageOverlay.release();
         for (Overlay overlay : overlays)
             if (overlay != null)
                 overlay.release();
         cameraManager.release();
+    }
+
+    @Override
+    public void onViewAttachedToWindow(View v) {
+
+    }
+
+    @Override
+    public void onViewDetachedFromWindow(View v) {
+        release();
     }
 }
