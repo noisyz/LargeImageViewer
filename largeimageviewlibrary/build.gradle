@@ -1,5 +1,28 @@
 apply plugin: 'com.android.library'
 
+ext {
+    bintrayRepo = 'maven'
+    bintrayName = 'LargeImageViewer'
+
+    publishedGroupId = 'com.noisyz.largeimageviewer'
+    libraryName = 'largeimageviewlibrary'
+    artifact = 'largeimageviewlibrary'
+
+    libraryDescription = 'Load and show large images with LargeImageView'
+
+    siteUrl = 'https://github.com/noisyz/LargeImageViewer'
+    gitUrl = 'https://github.com/noisyz/LargeImageViewer.git'
+
+    libraryVersion = '1.0.0'
+
+    developerId = 'noisyz'
+    developerName = 'Oleg Bogdan'
+    developerEmail = 'nero232@ukr.net'
+
+    licenseName = 'The Apache Software License, Version 2.0'
+    licenseUrl = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+    allLicenses = ["Apache-2.0"]
+}
 android {
     compileSdkVersion 24
     buildToolsVersion "24.0.3"
@@ -29,3 +52,8 @@ dependencies {
     compile 'com.android.support:appcompat-v7:24.2.1'
     testCompile 'junit:junit:4.12'
 }
+
+apply from: 'https://raw.githubusercontent.com/nuuneoi/JCenter/master/installv1.gradle'
+apply from: 'https://raw.githubusercontent.com/nuuneoi/JCenter/master/bintrayv1.gradle'
+//bintray.user=noisyz
+//bintray.apikey=7cf8cacb29af11a0f74ec2d422d097b57313e8bc

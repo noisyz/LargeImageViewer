@@ -1,30 +1,33 @@
 package com.noisyz.largeimageview.overlay.impl.camera;
 
-import android.graphics.Canvas;
-import android.graphics.Color;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 
 import com.noisyz.largeimageview.gestures.TouchManager;
 import com.noisyz.largeimageview.math.MathUtils;
 import com.noisyz.largeimageview.math.Vector2D;
-import com.noisyz.largeimageview.overlay.Overlay;
 
 
 /**
  * Created by imac on 16.10.16.
  */
 
-public class CameraManager implements View.OnTouchListener {
+public class CameraManager implements View.OnTouchListener{
 
     private TouchManager touchManager;
     private Camera camera;
     private MathUtils mathUtils;
+    private float cameraWidth, cameraHeight;
 
-    public CameraManager(Camera camera) {
+    public CameraManager() {
         this.mathUtils = new MathUtils();
-        this.camera = camera;
         touchManager = new TouchManager(2);
+    }
+
+    public void updateCamera(Camera camera){
+        this.camera = camera;
+        updateCameraSize(cameraWidth, cameraHeight);
     }
 
     public void addCameraCallback(UpdateCallback updateCallback) {
@@ -38,8 +41,10 @@ public class CameraManager implements View.OnTouchListener {
     }
 
     public void updateCameraSize(float width, float height) {
+        this.cameraWidth = width;
+        this.cameraHeight = height;
         if (camera != null)
-            this.camera.updateSize(width, height);
+            camera.updateSize(width, height);
     }
 
     @Override
@@ -52,7 +57,7 @@ public class CameraManager implements View.OnTouchListener {
         if (touchManager.getPressCount() == 1) {
             //map has been moved
             Vector2D newPosition = touchManager.moveDelta(0);
-            camera.updatePosition(newPosition);
+            camera.updatePosition(newPosition.getX(), newPosition.getY());
         } else {
             if (touchManager.getPressCount() == 2) {
 
@@ -84,5 +89,9 @@ public class CameraManager implements View.OnTouchListener {
         if (camera != null)
             camera.release();
         camera = null;
+    }
+
+    public interface CameraCallback {
+        void createCamera(Camera camera);
     }
 }

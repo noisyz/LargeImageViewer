@@ -7,10 +7,10 @@ import android.graphics.Canvas;
 import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.Rect;
-import android.support.annotation.NonNull;
 import android.util.Log;
 
 import com.noisyz.largeimageview.overlay.Overlay;
+import com.noisyz.largeimageview.overlay.impl.camera.CameraManager;
 import com.noisyz.largeimageview.overlay.impl.camera.UpdateCallback;
 
 import java.io.IOException;
@@ -25,9 +25,9 @@ public class ImageOverlay implements Overlay, UpdateCallback {
     private UpdateImageThread[] updateImageThreads;
     private ImageStateManager imageStateManager;
     private Callback imageOverlayChangedListener;
-    private UpdateCallback cameraCallback;
+    private CameraManager.CameraCallback cameraCallback;
 
-    public ImageOverlay(@NonNull UpdateCallback cameraCallback) {
+    public ImageOverlay(CameraManager.CameraCallback cameraCallback) {
         this.cameraCallback = cameraCallback;
     }
 
@@ -35,7 +35,6 @@ public class ImageOverlay implements Overlay, UpdateCallback {
         release();
         createImageOverlayGrid(inputStream, imageWidth, imageHeight);
     }
-
 
     //calculate map grid with parts of math bitmap
     private void createImageOverlayGrid(InputStream inputStream, int imageWidth, int imageHeight) {
@@ -51,8 +50,10 @@ public class ImageOverlay implements Overlay, UpdateCallback {
             }
         }
 
-        imageStateManager = new ImageStateManager(cameraCallback,
-                imageWidth, imageHeight, GRID_SIZE_HORIZONTAL, GRID_SIZE_VERTICAL);
+        imageStateManager = new ImageStateManager(imageWidth, imageHeight, GRID_SIZE_HORIZONTAL, GRID_SIZE_VERTICAL);
+
+        if (cameraCallback != null)
+            cameraCallback.createCamera(imageStateManager);
 
         ImageOverlayItem[] overlayItems = new ImageOverlayItem[GRID_SIZE_HORIZONTAL * GRID_SIZE_VERTICAL];
 
@@ -90,24 +91,18 @@ public class ImageOverlay implements Overlay, UpdateCallback {
         }
     }
 
-    public void setImageOverlayChangedListener(Callback listener) {
+    public void setOverlayChangedListener(Callback listener) {
         this.imageOverlayChangedListener = listener;
     }
 
     @Override
     public void updatePosition(float x, float y, float dX, float dY) {
         //update Image and camera position
-        if (imageStateManager != null)
-            imageStateManager.updatePosition(dX, dY);
-
         updateUI();
     }
 
     @Override
     public void updateZoom(float zoom, float dZoom, float centerX, float centerY) {
-        if (imageStateManager != null)
-            imageStateManager.updateZoom(dZoom, centerX, centerY);
-
         if (updateImageThreads != null)
             for (UpdateImageThread updateImageThread : updateImageThreads)
                 updateImageThread.updateScaleFactor();
@@ -118,22 +113,16 @@ public class ImageOverlay implements Overlay, UpdateCallback {
 
     @Override
     public void updateAngle(float angle, float dAngle, float dRadians, float rotationCenterX, float rotationCenterY) {
-        if (imageStateManager != null)
-            imageStateManager.updateRotation(dRadians, rotationCenterX, rotationCenterY);
-
         updateUI();
     }
 
     @Override
     public void updateCameraSize(float width, float height) {
-        if (imageStateManager != null)
-            imageStateManager.updateCameraSize(width, height);
-
+        updateUI();
     }
 
     @Override
     public void onTap(float x, float y) {
-
     }
 
     @Override

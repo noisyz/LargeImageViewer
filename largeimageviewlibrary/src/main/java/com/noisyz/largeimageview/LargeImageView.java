@@ -22,7 +22,7 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
-public class LargeImageView extends View implements Overlay.Callback, ViewTreeObserver.OnGlobalLayoutListener {
+public class LargeImageView extends View implements CameraManager.CameraCallback, Overlay.Callback, ViewTreeObserver.OnGlobalLayoutListener {
 
     private List<Overlay> overlays;
     private CameraManager cameraManager;
@@ -57,15 +57,12 @@ public class LargeImageView extends View implements Overlay.Callback, ViewTreeOb
 
         overlays = new ArrayList<>();
 
+        cameraManager = new CameraManager();
+
         //allow interact with screen events to all overlays
-        Camera camera = new Camera();
-        imageOverlay = new ImageOverlay(camera);
-        imageOverlay.setImageOverlayChangedListener(this);
+        imageOverlay = new ImageOverlay(this);
+        imageOverlay.setOverlayChangedListener(this);
 
-        camera.init(imageOverlay);
-        cameraManager = new CameraManager(camera);
-
-        setOnTouchListener(cameraManager);
         getViewTreeObserver().addOnGlobalLayoutListener(this);
     }
 
@@ -108,15 +105,40 @@ public class LargeImageView extends View implements Overlay.Callback, ViewTreeOb
     }
 
     public void addUpdateCallback(UpdateCallback updateCallback) {
-        cameraManager.addCameraCallback(updateCallback);
+        if (cameraManager != null)
+            cameraManager.addCameraCallback(updateCallback);
+    }
+
+    public void removeUpdateCallback(UpdateCallback updateCallback) {
+        if (cameraManager != null)
+            cameraManager.removeCameraCallback(updateCallback);
     }
 
     public void addOverlay(Overlay overlay) {
         overlays.add(overlay);
     }
 
-    public void removeOverlay(Overlay overlay){
+    public void removeOverlay(Overlay overlay) {
         overlays.remove(overlay);
+    }
+
+    @Override
+    public void createCamera(Camera camera) {
+        cameraManager.updateCamera(camera);
+        setOnTouchListener(cameraManager);
+        addUpdateCallback(imageOverlay);
+    }
+
+    //view size has been changed
+    @Override
+    public void onGlobalLayout() {
+        cameraManager.updateCameraSize(getMeasuredWidth(), getMeasuredHeight());
+    }
+
+    //called when view need to bee redrawn
+    @Override
+    public void needRedrawOverlay() {
+        post(updateUI);
     }
 
     @Override
@@ -133,18 +155,5 @@ public class LargeImageView extends View implements Overlay.Callback, ViewTreeOb
             if (overlay != null)
                 overlay.release();
         cameraManager.release();
-    }
-
-
-    //view size has been changed
-    @Override
-    public void onGlobalLayout() {
-        cameraManager.updateCameraSize(getMeasuredWidth(), getMeasuredHeight());
-    }
-
-    //called when view need to bee redrawn
-    @Override
-    public void needRedrawOverlay() {
-        post(updateUI);
     }
 }

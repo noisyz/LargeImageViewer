@@ -1,7 +1,8 @@
 package com.noisyz.largeimageview.overlay.impl.image;
 
+
 import com.noisyz.largeimageview.math.MathUtils;
-import com.noisyz.largeimageview.overlay.impl.camera.UpdateCallback;
+import com.noisyz.largeimageview.overlay.impl.camera.Camera;
 
 import static com.noisyz.largeimageview.math.MathUtils.DX;
 import static com.noisyz.largeimageview.math.MathUtils.DY;
@@ -10,76 +11,78 @@ import static com.noisyz.largeimageview.math.MathUtils.DY;
  * Created by imac on 05.12.16.
  */
 
-public class ImageStateManager {
+public class ImageStateManager extends Camera {
+
+    private static final float MIN_ZOOM = 0.1f;
+    private static final float MAX_ZOOM = 10f;
 
     private int MAX_SCALE_FACTOR;
-    private static final float MIN_ZOOM = 0.1f;
 
-    private float cameraWidth, cameraHeight, imagePositionX, imagePositionY,
-            zoom, angle, cos, sin, maxX, maxY;
+    private float cos, sin, maxX, maxY;
     private int imageWidth, imageHeight, horizontalSize, verticalSize;
 
     private final MathUtils mathUtils;
 
-    private UpdateCallback cameraCallback;
 
-    public ImageStateManager(UpdateCallback cameraCallback,
-                             int imageWidth, int imageHeight, int horizontalSize, int verticalSize) {
-        this.cameraCallback = cameraCallback;
+    public ImageStateManager(int imageWidth, int imageHeight, int horizontalSize, int verticalSize) {
+        super();
         this.imageWidth = imageWidth;
         this.imageHeight = imageHeight;
         this.horizontalSize = horizontalSize;
         this.verticalSize = verticalSize;
-        zoom = 1;
         mathUtils = new MathUtils();
+        updateRotateData();
     }
 
-    public void updateRotation(float dAngle, float centerX, float centerY) {
-        angle -= dAngle;
-        angle = (float) (angle % (2 * Math.PI));
-        if (angle > 0)
-            angle -= 2 * Math.PI;
+    @Override
+    public void rotate(float dAngle, float dAngleDeg, float centerX, float centerY) {
+        super.rotate(dAngle, mathUtils.toDegrees(dAngle), centerX, centerY);
         updateRotateData();
         updatePositionByRotation(-dAngle, centerX, centerY);
-        cameraCallback.updateAngle(angle, mathUtils.toDegrees(dAngle), dAngle, centerX, centerY);
     }
 
     private void updateRotateData() {
-        cos = (float) Math.cos(angle);
-        sin = (float) Math.sin(angle);
+        cos = (float) Math.cos(rotate);
+        sin = (float) Math.sin(rotate);
         calculateOverscrollValues();
     }
 
     private void updatePositionByRotation(float newAngle, float averageX, float averageY) {
-        float[] updates = mathUtils.getRotationPositionUpdates(newAngle, imagePositionX, imagePositionY, averageX, averageY);
+        float[] updates = mathUtils.getRotationPositionUpdates(newAngle, positionX, positionY, averageX, averageY);
         updatePosition(updates[DX], updates[DY]);
     }
 
-    public void updateZoom(float dZoom, float centerX, float centerY) {
-        float MAX_ZOOM = 10;
-        if (zoom * dZoom > MAX_ZOOM) {
-            dZoom = MAX_ZOOM / zoom;
-        }
-        if (zoom * dZoom < MIN_ZOOM) {
-            dZoom = MIN_ZOOM / zoom;
-        }
-        this.zoom *= dZoom;
-        updatePositionByZoom(dZoom, centerX, centerY);
-        calculateOverscrollValues();
 
-        cameraCallback.updateZoom(zoom, dZoom, centerX, centerY);
+    @Override
+    public void updateZoom(float dZoom, float centerX, float centerY) {
+        dZoom = validateDZoom(dZoom);
+        super.updateZoom(dZoom, centerX, centerY);
+        calculateOverscrollValues();
+        updatePositionByZoom(dZoom, centerX, centerY);
     }
 
+    private float validateDZoom(float dZoom) {
+        if (zoom * dZoom >= MAX_ZOOM) {
+            dZoom = MAX_ZOOM / zoom;
+        }
+        if (zoom * dZoom <= MIN_ZOOM) {
+            dZoom = MIN_ZOOM / zoom;
+        }
+        return dZoom;
+    }
+
+
     private void updatePositionByZoom(float dZoom, float centerX, float centerY) {
-        float dX = (imagePositionX - centerX) * (dZoom - 1);
-        float dY = (imagePositionY - centerY) * (dZoom - 1);
+        float dX = (positionX - centerX) * (dZoom - 1);
+        float dY = (positionY - centerY) * (dZoom - 1);
         updatePosition(dX, dY);
     }
 
+    @Override
     public void updatePosition(float dX, float dY) {
-        imagePositionX += getHorizontalOverscrolled(imagePositionX, dX);
-        imagePositionY += getVerticalOverscrolled(imagePositionY, dY);
-        cameraCallback.updatePosition(imagePositionX, imagePositionY, dX, dY);
+        dX = getHorizontalOverscrolled(positionX, dX);
+        dY = getVerticalOverscrolled(positionY, dY);
+        super.updatePosition(dX, dY);
     }
 
     private float getHorizontalOverscrolled(float imagePositionX, float dX) {
@@ -103,9 +106,9 @@ public class ImageStateManager {
         return dY;
     }
 
-    public void updateCameraSize(float width, float height) {
-        this.cameraWidth = width;
-        this.cameraHeight = height;
+    @Override
+    public void updateSize(float width, float height) {
+        super.updateSize(width, height);
         calculateOverscrollValues();
         calculateMaxZoom(width, height);
     }
@@ -131,7 +134,7 @@ public class ImageStateManager {
     }
 
     public float getAngle() {
-        return angle;
+        return rotate;
     }
 
     public float getCameraWidth() {
@@ -143,11 +146,11 @@ public class ImageStateManager {
     }
 
     public float getImagePositionX() {
-        return imagePositionX;
+        return positionX;
     }
 
     public float getImagePositionY() {
-        return imagePositionY;
+        return positionY;
     }
 
     public float getZoom() {
