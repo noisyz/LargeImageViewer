@@ -34,7 +34,7 @@ largeImageView.setImageFromFile(yourFile);
 ...
 ```
 
-Also allow creating custom methods.
+Also allows creating custom methods.
 Use
 ```java
 largeImageView.loadImage(InputStream inputStream, int imageWidth, int imageHeight);
